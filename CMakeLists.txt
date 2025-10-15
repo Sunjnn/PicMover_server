@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.16)
+project(PicMover LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Network HttpServer Gui Widgets)
+
+set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+file(GLOB SOURCES "${SRC_DIR}/*.cxx")
+file(GLOB HEADERS "${SRC_DIR}/*.hxx")
+
+qt_standard_project_setup()
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network Qt6::HttpServer Qt6::Gui Qt6::Widgets)

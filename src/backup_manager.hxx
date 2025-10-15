@@ -1,0 +1,35 @@
+#ifndef _BACKUP_MANAGER_HXX_
+#define _BACKUP_MANAGER_HXX_
+
+#include <filesystem>
+#include <string>
+#include <vector>
+
+#include <qcontainerfwd.h>
+
+#include "file_content.hxx"
+
+class BackupManager {
+public:
+    BackupManager(const std::string &backupDirectory) : _backupDirectory(backupDirectory) {
+    }
+
+    std::vector<int> backup_files(const std::vector<FileContent> &files) const;
+
+    bool backup_file(const std::string &fileName, const QByteArray &content) const;
+    bool backup_file(const QString &fileName, const QByteArray &content) const;
+
+private:
+    enum class Format : char {
+        HEIC = 0,
+        JPEG = 1,
+        PNG = 2,
+    };
+
+    static Format get_format(const std::string &formatString);
+    static Format get_format(const QString &formatString);
+
+    std::filesystem::path _backupDirectory;
+};
+
+#endif // _BACKUP_MANAGER_HXX_

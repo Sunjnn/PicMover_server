@@ -1,0 +1,265 @@
+#include "http_server.hxx"
+
+#include <cstdint>
+#include <stdexcept>
+#include <limits>
+#include <memory>
+#include <random>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <QtConcurrent/qtconcurrentrun.h>
+#include <qcontainerfwd.h>
+#include <qfuture.h>
+#include <qhostaddress.h>
+#include <qhttpserverrequest.h>
+#include <qhttpserverresponse.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qjsonparseerror.h>
+#include <qjsonvalue.h>
+#include <qlogging.h>
+#include <qmessagebox.h>
+#include <qobject.h>
+#include <qstringview.h>
+#include <qthread.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qurlquery.h>
+#include <qwidget.h>
+
+#include "backup_manager.hxx"
+#include "config.hxx"
+#include "file_content.hxx"
+#include "main_window.hxx"
+#include "utility.hxx"
+
+using std::make_unique;
+using std::mt19937;
+using std::numeric_limits;
+using std::random_device;
+using std::runtime_error;
+using std::string;
+using std::uint16_t;
+using std::uniform_int_distribution;
+using std::vector;
+
+HttpServer::HttpServer(MainWindow *parent, uint16_t port) {
+    _server.route("/ping", [this]() { return on_ping(); });
+
+    _server.route("/connect", QHttpServerRequest::Method::Post,
+                  [this](const QHttpServerRequest &request) { return on_connect(request); });
+
+    _server.route("/status", QHttpServerRequest::Method::Get,
+                  [this](const QHttpServerRequest &request) { return on_status(request); });
+
+    _server.route("/upload", QHttpServerRequest::Method::Post,
+                  [this](const QHttpServerRequest &request) { return on_upload(request); });
+
+    if (!_tcpServer.listen(QHostAddress::Any, port) || !_server.bind(&_tcpServer)) {
+        throw runtime_error("Failed to start HTTP server " + _tcpServer.errorString().toStdString());
+    }
+}
+
+void HttpServer::set_is_approved(ConnectId connectId, bool approved) {
+    if (!approved) {
+        _connectionMetas.erase(connectId);
+        return;
+    }
+
+    Config &config = Config::get_instance();
+
+    const string backupDirectory = config.get_default_save_dir().toStdString() + "/" + std::to_string(connectId);
+    _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
+    _connectionMetas[connectId].approved = true;
+}
+
+QHttpServerResponse HttpServer::on_ping() {
+    QJsonObject response;
+
+    const Config &config = Config::get_instance();
+    response["Name"] = config.get_server_name();
+
+    return QHttpServerResponse(response);
+}
+
+QHttpServerResponse HttpServer::on_connect(const QHttpServerRequest &request) {
+    QByteArray rawBody = request.body();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(rawBody, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        return QHttpServerResponse("Invalid JSON: " + parseError.errorString(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QJsonObject json = doc.object();
+    QString clientName = json["ClientName"].toString();
+
+    ConnectId connectId = generate_connect_id();
+
+    _connectionMetas[connectId] = ConnectionMeta{false, nullptr};
+
+    emit signal_connect_request(clientName, connectId);
+
+    QJsonObject response;
+    response["ConnectId"] = connectId;
+    return QHttpServerResponse(response);
+}
+
+QHttpServerResponse HttpServer::on_status(const QHttpServerRequest &request) {
+    const QUrlQuery query(request.url());
+    const QString connectIdString = query.queryItemValue("ConnectId");
+    const QString taskIdString = query.queryItemValue("TaskId");
+
+    if (connectIdString.isEmpty() && taskIdString.isEmpty()) {
+        return QHttpServerResponse("ConnectId or TaskId is required", QHttpServerResponse::StatusCode::BadRequest);
+    }
+    else if (!connectIdString.isEmpty()) {
+        bool ok = false;
+        ConnectId connectId = convert_to_connect_id(connectIdString, &ok);
+        if (!ok) {
+            return QHttpServerResponse("Invalid ConnectId. ConnectId must be integer",
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        if (_connectionMetas.find(connectId) == _connectionMetas.end()) {
+            return QHttpServerResponse("Invalid ConnectId. ConnectionId not found.",
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        const ConnectionMeta &meta = _connectionMetas[connectId];
+
+        QJsonObject response;
+        response["ConnectId"] = connectId;
+        response["Approved"] = meta.approved;
+        return QHttpServerResponse(response);
+    }
+    else {
+        bool ok = false;
+        TaskId taskId = convert_to_task_od(taskIdString, &ok);
+        if (!ok) {
+            return QHttpServerResponse("Invalid TaskId. TaskId must be integer",
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        if (_taskFutures.find(taskId) == _taskFutures.end()) {
+            return QHttpServerResponse("Invalid TaskId. TaskId not found.",
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        QJsonObject response;
+        response["TaskId"] = taskId;
+
+        const QFuture<vector<int>> &future = _taskFutures[taskId];
+        if (future.isRunning()) {
+            response["Status"] = "Running";
+        }
+        else if (future.isFinished()) {
+            response["Status"] = "Finished";
+
+            const vector<int> &failedIndexes = future.result();
+            QJsonArray resultArray;
+            for (int failedIndex : failedIndexes) {
+                resultArray.append(failedIndex);
+            }
+            response["Result"] = resultArray;
+
+            _taskFutures.erase(taskId);
+        }
+        else {
+            response["Status"] = "Not running and not finished";
+        }
+
+        return QHttpServerResponse(response);
+    }
+}
+
+QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
+    QByteArray rawBody = request.body();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(rawBody, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        return QHttpServerResponse("Invalid JSON: " + parseError.errorString(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QJsonObject json = doc.object();
+
+    if (!json.contains("ConnectId")) {
+        return QHttpServerResponse("Missing 'ConnectId' field", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    ConnectId connectId = json["ConnectId"].toInteger();
+    if (_connectionMetas.find(connectId) == _connectionMetas.end()) {
+        return QHttpServerResponse("Invalid connectId", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    if (!json.contains("Data") || !json["Data"].isArray()) {
+        return QHttpServerResponse("Missing or invalid 'Data' field", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    vector<FileContent> files;
+
+    QJsonArray dataArray = json["Data"].toArray();
+    for (const QJsonValue &node : dataArray) {
+        if (!node.isObject()) {
+            return QHttpServerResponse("Invalid file Data format in: " + node.toString(),
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        QJsonObject fileObject = node.toObject();
+        if (!fileObject.contains("FileName") || !fileObject.contains("Content")) {
+            return QHttpServerResponse("Missing 'FileName' or 'Content' field in: " + node.toString(),
+                                       QHttpServerResponse::StatusCode::BadRequest);
+        }
+
+        QString fileName = fileObject["FileName"].toString();
+        QString content = fileObject["Content"].toString();
+
+        files.emplace_back(std::move(fileName), std::move(content));
+    }
+
+    const BackupManager *backupManager = _connectionMetas[connectId].backupManager.get();
+
+    TaskId taskId = generate_task_id();
+
+    _taskFutures[taskId] = QtConcurrent::run(&BackupManager::backup_files, backupManager, std::move(files));
+
+    QJsonObject response;
+    response["TaskId"] = taskId;
+    return QHttpServerResponse(response);
+}
+
+HttpServer::ConnectId HttpServer::generate_connect_id() {
+    ConnectId connectId = generate_random_number(static_cast<ConnectId>(0), numeric_limits<ConnectId>::max());
+    while (_connectionMetas.find(connectId) != _connectionMetas.end()) {
+        connectId = generate_random_number(static_cast<ConnectId>(0), numeric_limits<ConnectId>::max());
+    }
+    return connectId;
+}
+
+HttpServer::TaskId HttpServer::generate_task_id() {
+    TaskId taskId = generate_random_number(static_cast<TaskId>(0), numeric_limits<TaskId>::max());
+    while (_taskFutures.find(taskId) != _taskFutures.end()) {
+        taskId = generate_random_number(static_cast<TaskId>(0), numeric_limits<TaskId>::max());
+    }
+    return taskId;
+}
+
+QString HttpServer::generate_name() {
+    const vector<QString> adjectives = {"quick",  "lazy",  "happy", "sad",    "brave",
+                                        "clever", "witty", "calm",  "bright", "gentle"};
+    const vector<QString> nouns = {"fox", "dog", "cat", "mouse", "lion", "tiger", "bear", "wolf", "eagle", "shark"};
+
+    int intMax = numeric_limits<int>::max();
+    int adjectiveIndex = generate_random_number(0, static_cast<int>(adjectives.size() - 1));
+    int nounIndex = generate_random_number(0, static_cast<int>(nouns.size() - 1));
+    int number = generate_random_number(1, 9999);
+
+    QString name = adjectives[adjectiveIndex] + "_" + nouns[nounIndex] + "_" + QString::number(number);
+    return name;
+}

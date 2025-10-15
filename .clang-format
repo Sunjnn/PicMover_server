@@ -1,0 +1,65 @@
+BasedOnStyle: Microsoft
+
+AccessModifierOffset: -4
+UseTab: Never
+
+SpacesInAngles: false
+SpaceAfterTemplateKeyword: false
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeWhile: false
+
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Header corresponding to the current source file
+  - Regex: '^"(.*)\.h"'
+    Priority: 0
+    SortPriority: 0
+
+  # Qt header files
+  - Regex: '^<(q|Q|QT).*\.h>'
+    Priority: 2
+    SortPriority: 5
+    CaseSensitive: true
+
+  # Qt header files
+  - Regex: '^<(QT|Q|q).*>'
+    Priority: 2
+    SortPriority: 6
+    CaseSensitive: true
+
+  # System-level C headers (.h ending)
+  - Regex: '^<.*\.h>'
+    Priority: 1
+    SortPriority: 1
+
+  # System-level headers starting with 'c'
+  - Regex: '^<c.*>'
+    Priority: 1
+    SortPriority: 2
+
+  # System-level headers starting with 'std'
+  - Regex: '^<std.*>'
+    Priority: 1
+    SortPriority: 3
+
+  # Other system / standard library headers
+  - Regex: '^<.*>'
+    Priority: 1
+    SortPriority: 4
+
+  # Other local project headers
+  - Regex: '^".*"'
+    Priority: 3
+    SortPriority: 7
