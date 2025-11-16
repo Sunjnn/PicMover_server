@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(PicMover LANGUAGES CXX)
 
+set(CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
+include(${CMAKE_DIR}/version.cmake)
+
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network HttpServer Gui Widgets)
@@ -32,7 +35,7 @@ include(InstallRequiredSystemLibraries)
 
 set(CPACK_GENERATOR "NSIS")
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-set(CPACK_PACKAGE_VERSION "0.0.1")
+set(CPACK_PACKAGE_VERSION ${GIT_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Backup pictures from iPhone to Windows.")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY ${PROJECT_NAME})
 set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")

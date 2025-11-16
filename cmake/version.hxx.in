@@ -1,0 +1,3 @@
+#ifndef PICMOVER_VERSION
+#define PICMOVER_VERSION "@GIT_VERSION@"
+#endif
