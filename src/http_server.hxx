@@ -37,7 +37,7 @@ public:
         return taskIdStr.toLongLong(ok);
     }
 
-    void set_is_approved(ConnectId connectId, bool approved);
+    void set_is_approved(ConnectId connectId, bool approved, const QString &savePath);
 
 signals:
     void signal_connect_request(QString clientName, ConnectId connectId);

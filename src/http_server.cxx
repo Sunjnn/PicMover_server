@@ -63,7 +63,7 @@ HttpServer::HttpServer(MainWindow *parent, uint16_t port) {
     }
 }
 
-void HttpServer::set_is_approved(ConnectId connectId, bool approved) {
+void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QString &savePath) {
     if (!approved) {
         _connectionMetas.erase(connectId);
         return;
@@ -71,7 +71,7 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved) {
 
     Config &config = Config::get_instance();
 
-    const string backupDirectory = config.get_default_save_dir().toStdString() + "/" + std::to_string(connectId);
+    const string backupDirectory = savePath.toStdString();
     _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
     _connectionMetas[connectId].approved = true;
 }

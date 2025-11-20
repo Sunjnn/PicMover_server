@@ -4,6 +4,7 @@
 
 #include <qboxlayout.h>
 #include <qcoreevent.h>
+#include <qdialog.h>
 #include <qfiledialog.h>
 #include <qframe.h>
 #include <qhostaddress.h>
@@ -17,6 +18,7 @@
 #include <qwidget.h>
 
 #include "config.hxx"
+#include "connect_dialog.hxx"
 #include "http_server.hxx"
 
 using std::make_unique;
@@ -148,9 +150,12 @@ void MainWindow::setup_ui() {
 }
 
 void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId connectId) {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Connect Request", "Client " + clientName + " wants to connect. Accept?",
-                                  QMessageBox::Yes | QMessageBox::No);
-
-    _httpServer->set_is_approved(connectId, reply == QMessageBox::Yes);
+    ConnectDialog connectDialog(clientName, this);
+    if (connectDialog.exec() == QDialog::Accepted) {
+        const QString &path = connectDialog.get_download_path();
+        _httpServer->set_is_approved(connectId, true, path);
+    }
+    else {
+        _httpServer->set_is_approved(connectId, false, "");
+    }
 }
