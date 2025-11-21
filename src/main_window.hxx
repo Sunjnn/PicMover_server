@@ -1,9 +1,12 @@
 #ifndef _MAIN_WINDOW_HXX_
 #define _MAIN_WINDOW_HXX_
 
+#include <qboxlayout.h>
 #include <qhostaddress.h>
+#include <qlabel.h>
 #include <qmainwindow.h>
 #include <qobject.h>
+#include <qstackedwidget.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
 
@@ -14,6 +17,9 @@ class MainWindow : public QMainWindow {
 
 public:
     MainWindow(QWidget *parent = nullptr);
+
+signals:
+    void signal_client_changed();
 
 private slots:
     void on_connect_request(QString clientName, HttpServer::ConnectId connectId);

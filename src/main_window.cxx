@@ -10,9 +10,11 @@
 #include <qhostaddress.h>
 #include <qlabel.h>
 #include <qlineedit.h>
+#include <qlogging.h>
 #include <qmessagebox.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
+#include <qscrollarea.h>
 #include <qstackedwidget.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -20,6 +22,7 @@
 #include "config.hxx"
 #include "connect_dialog.hxx"
 #include "http_server.hxx"
+#include "receive_page.hxx"
 
 using std::make_unique;
 
@@ -84,13 +87,7 @@ void MainWindow::setup_ui() {
     auto *stackedWidget = new QStackedWidget();
 
     // Receive Page
-    auto *receivePage = new QWidget();
-    auto *receiveLayout = new QVBoxLayout(receivePage);
-    receiveLayout->setAlignment(AlignCenter);
-
-    auto *nameLabel = new QLabel(config.get_server_name());
-    nameLabel->setStyleSheet("font-size: 28px; font-weight: bold;");
-    receiveLayout->addWidget(nameLabel);
+    auto *receivePage = new ReceivePage(config.get_server_name());
 
     // Settings Page
     auto *settingsPage = new QWidget();
@@ -147,6 +144,8 @@ void MainWindow::setup_ui() {
             config.set_default_save_dir(dir);
         }
     });
+
+    connect(this, &MainWindow::signal_client_changed, receivePage, &ReceivePage::update_client_list);
 }
 
 void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId connectId) {
@@ -159,4 +158,6 @@ void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId co
     else {
         httpServer.set_is_approved(connectId, false, "");
     }
+
+    emit signal_client_changed();
 }

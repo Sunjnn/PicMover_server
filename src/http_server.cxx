@@ -1,11 +1,13 @@
 #include "http_server.hxx"
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <limits>
 #include <memory>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -33,7 +35,6 @@
 #include "backup_manager.hxx"
 #include "config.hxx"
 #include "file_content.hxx"
-#include "main_window.hxx"
 #include "utility.hxx"
 
 using std::make_unique;
@@ -44,6 +45,7 @@ using std::runtime_error;
 using std::string;
 using std::uint16_t;
 using std::uniform_int_distribution;
+using std::unordered_map;
 using std::vector;
 
 HttpServer &HttpServer::get_instance() {
@@ -81,6 +83,18 @@ HttpServer::HttpServer(uint16_t port) {
     }
 }
 
+size_t HttpServer::get_connection_count() const {
+    return _connectionMetas.size();
+}
+
+unordered_map<HttpServer::ConnectId, ConnectionMeta>::const_iterator HttpServer::get_connection_begin() const {
+    return _connectionMetas.cbegin();
+}
+
+unordered_map<HttpServer::ConnectId, ConnectionMeta>::const_iterator HttpServer::get_connection_end() const {
+    return _connectionMetas.cend();
+}
+
 QHttpServerResponse HttpServer::on_ping() {
     QJsonObject response;
 
@@ -105,7 +119,7 @@ QHttpServerResponse HttpServer::on_connect(const QHttpServerRequest &request) {
 
     ConnectId connectId = generate_connect_id();
 
-    _connectionMetas[connectId] = ConnectionMeta{false, nullptr};
+    _connectionMetas[connectId] = ConnectionMeta{clientName, nullptr, false};
 
     emit signal_connect_request(clientName, connectId);
 

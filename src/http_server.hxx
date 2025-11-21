@@ -1,6 +1,7 @@
 #ifndef _HTTP_SERVER_HXX_
 #define _HTTP_SERVER_HXX_
 
+#include <cstddef>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -18,6 +19,12 @@
 #include <qwidget.h>
 
 #include "backup_manager.hxx"
+
+struct ConnectionMeta {
+    QString clientName;
+    std::unique_ptr<BackupManager> backupManager;
+    bool approved;
+};
 
 class MainWindow;
 
@@ -39,6 +46,10 @@ public:
 
     void set_is_approved(ConnectId connectId, bool approved, const QString &savePath);
 
+    size_t get_connection_count() const;
+    std::unordered_map<ConnectId, ConnectionMeta>::const_iterator get_connection_begin() const;
+    std::unordered_map<ConnectId, ConnectionMeta>::const_iterator get_connection_end() const;
+
 signals:
     void signal_connect_request(QString clientName, ConnectId connectId);
 
@@ -55,11 +66,6 @@ private:
     TaskId generate_task_id();
 
     QString generate_name();
-
-    struct ConnectionMeta {
-        bool approved;
-        std::unique_ptr<BackupManager> backupManager;
-    };
 
     QHttpServer _server;
     QTcpServer _tcpServer;
