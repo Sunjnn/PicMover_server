@@ -1,8 +1,6 @@
 #ifndef _MAIN_WINDOW_HXX_
 #define _MAIN_WINDOW_HXX_
 
-#include <memory>
-
 #include <qhostaddress.h>
 #include <qmainwindow.h>
 #include <qobject.h>
@@ -22,8 +20,6 @@ private slots:
 
 private:
     void setup_ui();
-
-    std::unique_ptr<HttpServer> _httpServer;
 };
 
 #endif // _MAIN_WINDOW_HXX_

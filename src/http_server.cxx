@@ -46,7 +46,25 @@ using std::uint16_t;
 using std::uniform_int_distribution;
 using std::vector;
 
-HttpServer::HttpServer(MainWindow *parent, uint16_t port) {
+HttpServer &HttpServer::get_instance() {
+    static HttpServer instance(54321);
+    return instance;
+}
+
+void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QString &savePath) {
+    if (!approved) {
+        _connectionMetas.erase(connectId);
+        return;
+    }
+
+    Config &config = Config::get_instance();
+
+    const string backupDirectory = savePath.toStdString();
+    _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
+    _connectionMetas[connectId].approved = true;
+}
+
+HttpServer::HttpServer(uint16_t port) {
     _server.route("/ping", [this]() { return on_ping(); });
 
     _server.route("/connect", QHttpServerRequest::Method::Post,
@@ -61,19 +79,6 @@ HttpServer::HttpServer(MainWindow *parent, uint16_t port) {
     if (!_tcpServer.listen(QHostAddress::Any, port) || !_server.bind(&_tcpServer)) {
         throw runtime_error("Failed to start HTTP server " + _tcpServer.errorString().toStdString());
     }
-}
-
-void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QString &savePath) {
-    if (!approved) {
-        _connectionMetas.erase(connectId);
-        return;
-    }
-
-    Config &config = Config::get_instance();
-
-    const string backupDirectory = savePath.toStdString();
-    _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
-    _connectionMetas[connectId].approved = true;
 }
 
 QHttpServerResponse HttpServer::on_ping() {

@@ -27,11 +27,11 @@ using Qt::AlignCenter;
 using Qt::AlignTop;
 using Qt::QueuedConnection;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _httpServer(make_unique<HttpServer>(this, 54321)) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setup_ui();
 
-    connect(_httpServer.get(), &HttpServer::signal_connect_request, this, &MainWindow::on_connect_request,
-            QueuedConnection);
+    HttpServer &httpServer = HttpServer::get_instance();
+    connect(&httpServer, &HttpServer::signal_connect_request, this, &MainWindow::on_connect_request, QueuedConnection);
 }
 
 void MainWindow::setup_ui() {
@@ -151,11 +151,12 @@ void MainWindow::setup_ui() {
 
 void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId connectId) {
     ConnectDialog connectDialog(clientName, this);
+    HttpServer &httpServer = HttpServer::get_instance();
     if (connectDialog.exec() == QDialog::Accepted) {
         const QString &path = connectDialog.get_download_path();
-        _httpServer->set_is_approved(connectId, true, path);
+        httpServer.set_is_approved(connectId, true, path);
     }
     else {
-        _httpServer->set_is_approved(connectId, false, "");
+        httpServer.set_is_approved(connectId, false, "");
     }
 }

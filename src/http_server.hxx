@@ -28,8 +28,6 @@ public:
     using ConnectId = qsizetype;
     using TaskId = qsizetype;
 
-    HttpServer(MainWindow *parent, std::uint16_t port);
-
     ConnectId convert_to_connect_id(const QString &connectIdStr, bool *ok) {
         return connectIdStr.toLongLong(ok);
     }
@@ -37,12 +35,16 @@ public:
         return taskIdStr.toLongLong(ok);
     }
 
+    static HttpServer &get_instance();
+
     void set_is_approved(ConnectId connectId, bool approved, const QString &savePath);
 
 signals:
     void signal_connect_request(QString clientName, ConnectId connectId);
 
 private:
+    HttpServer(std::uint16_t port);
+
     QHttpServerResponse on_ping();
     QHttpServerResponse on_connect(const QHttpServerRequest &request);
     QHttpServerResponse on_status(const QHttpServerRequest &request);
