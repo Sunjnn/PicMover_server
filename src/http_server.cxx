@@ -76,7 +76,7 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
     connect(_connectionMetas[connectId].timer.get(), &QTimer::timeout, this,
             [this, connectId]() { remove_connection(connectId); });
 
-    emit signal_connection_approved(_connectionMetas[connectId].frame.get(), _connectionMetas[connectId].clientName);
+    emit signal_connection_approved(_connectionMetas[connectId].frame.get(), _connectionMetas[connectId]);
 }
 
 HttpServer::HttpServer(uint16_t port) {

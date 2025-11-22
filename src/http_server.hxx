@@ -61,7 +61,7 @@ public:
 
 signals:
     void signal_connect_request(const QString &clientName, ConnectId connectId);
-    void signal_connection_approved(QFrame *frame, const QString &clientName);
+    void signal_connection_approved(QFrame *frame, const ConnectionMeta &meta);
     void signal_connection_removed(QFrame *frame);
 
 private:

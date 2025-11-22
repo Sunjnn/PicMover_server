@@ -64,6 +64,10 @@ bool BackupManager::backup_file(const QString &fileName, const QString &creation
     return ofs.good();
 }
 
+QString BackupManager::get_backup_directory() const {
+    return QString::fromStdString(_backupDirectory.string());
+}
+
 BackupManager::Format BackupManager::get_format(const QString &formatString) {
     QString lowerFormatString = formatString.toLower();
 

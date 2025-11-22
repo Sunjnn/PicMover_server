@@ -7,6 +7,8 @@
 #include <qtmetamacros.h>
 #include <qwidget.h>
 
+#include "http_server.hxx"
+
 class ReceivePage : public QWidget {
     Q_OBJECT
 
@@ -14,7 +16,7 @@ public:
     ReceivePage(const QString &serverName, QWidget *parent = nullptr);
 
 private slots:
-    void on_connection_approved(QFrame *frame, const QString &clientName);
+    void on_connection_approved(QFrame *frame, const ConnectionMeta &meta);
     void on_connection_removed(QFrame *frame);
 
 private:

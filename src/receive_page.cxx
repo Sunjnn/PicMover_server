@@ -43,7 +43,7 @@ ReceivePage::ReceivePage(const QString &serverName, QWidget *parent) : QWidget(p
     connect(&httpServer, &HttpServer::signal_connection_removed, this, &ReceivePage::on_connection_removed);
 }
 
-void ReceivePage::on_connection_approved(QFrame *frame, const QString &clientName) {
+void ReceivePage::on_connection_approved(QFrame *frame, const ConnectionMeta &meta) {
     frame->setStyleSheet("QFrame {"
                          "  border: 5px solid #00ff00ff;"
                          "  border-radius: 6px;"
@@ -54,8 +54,11 @@ void ReceivePage::on_connection_approved(QFrame *frame, const QString &clientNam
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    auto *nameLabel = new QLabel(clientName);
-    layout->addWidget(nameLabel);
+    auto *clientName = new QLabel("Client Name: " + meta.clientName);
+    layout->addWidget(clientName);
+
+    auto *savePath = new QLabel("Save Path: " + meta.backupManager->get_backup_directory());
+    layout->addWidget(savePath);
 
     _clientListLayout->addWidget(frame);
 

@@ -18,6 +18,8 @@ public:
 
     bool backup_file(const QString &fileName, const QString &creationDate, const QByteArray &content) const;
 
+    QString get_backup_directory() const;
+
 private:
     enum class Format : char {
         HEIC = 0,
