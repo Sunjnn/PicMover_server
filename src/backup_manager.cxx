@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include <qcontainerfwd.h>
 #include <qobject.h>
 #include <qstringview.h>
 #include <qtypes.h>
@@ -29,9 +30,10 @@ vector<int> BackupManager::backup_files(const vector<FileContent> &files) const 
     for (size_t i = 0; i < files.size(); ++i) {
         const FileContent &file = files[i];
         const QString &fileName = file.get_file_name();
-        const QByteArray content = QByteArray::fromBase64(file.get_content().toUtf8());
+        const QString &creationDate = file.get_creation_date();
+        const QByteArray &content = QByteArray::fromBase64(file.get_content().toUtf8());
 
-        if (!backup_file(fileName, content)) {
+        if (!backup_file(fileName, creationDate, content)) {
             failedIndexes.push_back(i);
         }
     }
@@ -39,26 +41,7 @@ vector<int> BackupManager::backup_files(const vector<FileContent> &files) const 
     return failedIndexes;
 }
 
-bool BackupManager::backup_file(const string &fileName, const QByteArray &content) const {
-    // Here we assume the format can be inferred from the file extension
-    size_t dotPos = fileName.find_last_of('.');
-    string formatString = (dotPos != string::npos) ? fileName.substr(dotPos + 1) : "";
-
-    try {
-        get_format(formatString);
-    }
-    catch (const invalid_argument &e) {
-        // Handle unsupported format
-        return false;
-    }
-
-    path absolutePath = _backupDirectory / fileName;
-    ofstream ofs(absolutePath, std::ios::binary);
-    ofs.write(content.constData(), content.size());
-    return ofs.good();
-}
-
-bool BackupManager::backup_file(const QString &fileName, const QByteArray &content) const {
+bool BackupManager::backup_file(const QString &fileName, const QString &creationDate, const QByteArray &content) const {
     qsizetype dotPos = fileName.lastIndexOf('.');
     if (dotPos == -1)
         return false;
@@ -72,27 +55,13 @@ bool BackupManager::backup_file(const QString &fileName, const QByteArray &conte
         return false;
     }
 
-    path absolutePath = _backupDirectory / fileName.toStdString();
+    const QString &baseName = fileName.left(dotPos);
+    QString newFileName = baseName + "_" + creationDate + "." + formatString;
+
+    path absolutePath = _backupDirectory / newFileName.toStdString();
     ofstream ofs(absolutePath, std::ios::binary);
     ofs.write(content.constData(), content.size());
     return ofs.good();
-}
-
-BackupManager::Format BackupManager::get_format(const string &formatString) {
-    string lowerFormatString = formatString;
-    transform(lowerFormatString.begin(), lowerFormatString.end(), lowerFormatString.begin(),
-              [](char ch) -> char { return static_cast<char>(tolower(ch)); });
-
-    if (lowerFormatString == "heic") {
-        return Format::HEIC;
-    }
-    else if (lowerFormatString == "jpeg" || lowerFormatString == "jpg") {
-        return Format::JPEG;
-    }
-    else if (lowerFormatString == "png") {
-        return Format::PNG;
-    }
-    throw invalid_argument("Unknown image format: " + formatString);
 }
 
 BackupManager::Format BackupManager::get_format(const QString &formatString) {

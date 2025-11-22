@@ -231,15 +231,17 @@ QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
         }
 
         QJsonObject fileObject = node.toObject();
-        if (!fileObject.contains("FileName") || !fileObject.contains("Content")) {
-            return QHttpServerResponse("Missing 'FileName' or 'Content' field in: " + node.toString(),
+        if (!fileObject.contains("FileName") || !fileObject.contains("CreationDate") ||
+            !fileObject.contains("Content")) {
+            return QHttpServerResponse("Missing 'FileName', 'CreationDate' or 'Content' field in: " + node.toString(),
                                        QHttpServerResponse::StatusCode::BadRequest);
         }
 
-        QString fileName = fileObject["FileName"].toString();
-        QString content = fileObject["Content"].toString();
+        const QString &fileName = fileObject["FileName"].toString();
+        const QString &creationDate = fileObject["CreationDate"].toString();
+        const QString &content = fileObject["Content"].toString();
 
-        files.emplace_back(std::move(fileName), std::move(content));
+        files.emplace_back(std::move(fileName), std::move(creationDate), std::move(content));
     }
 
     const BackupManager *backupManager = _connectionMetas[connectId].backupManager.get();

@@ -16,8 +16,7 @@ public:
 
     std::vector<int> backup_files(const std::vector<FileContent> &files) const;
 
-    bool backup_file(const std::string &fileName, const QByteArray &content) const;
-    bool backup_file(const QString &fileName, const QByteArray &content) const;
+    bool backup_file(const QString &fileName, const QString &creationDate, const QByteArray &content) const;
 
 private:
     enum class Format : char {
@@ -26,7 +25,6 @@ private:
         PNG = 2,
     };
 
-    static Format get_format(const std::string &formatString);
     static Format get_format(const QString &formatString);
 
     std::filesystem::path _backupDirectory;
