@@ -18,11 +18,8 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
 
-signals:
-    void signal_client_changed();
-
 private slots:
-    void on_connect_request(QString clientName, HttpServer::ConnectId connectId);
+    void on_connect_request(const QString &clientName, HttpServer::ConnectId connectId);
 
 private:
     void setup_ui();

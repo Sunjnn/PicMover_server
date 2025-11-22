@@ -13,6 +13,7 @@
 
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <qcontainerfwd.h>
+#include <qframe.h>
 #include <qfuture.h>
 #include <qhostaddress.h>
 #include <qhttpserverrequest.h>
@@ -25,8 +26,10 @@
 #include <qlogging.h>
 #include <qmessagebox.h>
 #include <qobject.h>
+#include <qobjectdefs.h>
 #include <qstringview.h>
 #include <qthread.h>
+#include <qtimer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
 #include <qurlquery.h>
@@ -63,7 +66,17 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
 
     const string backupDirectory = savePath.toStdString();
     _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
+    _connectionMetas[connectId].frame = make_unique<QFrame>();
+    _connectionMetas[connectId].timer = make_unique<QTimer>();
+    _connectionMetas[connectId].timer->setSingleShot(true);
+    _connectionMetas[connectId].timer->setInterval(60 * 1000);
+    _connectionMetas[connectId].timer->start();
     _connectionMetas[connectId].approved = true;
+
+    connect(_connectionMetas[connectId].timer.get(), &QTimer::timeout, this,
+            [this, connectId]() { remove_connection(connectId); });
+
+    emit signal_connection_approved(_connectionMetas[connectId].frame.get(), _connectionMetas[connectId].clientName);
 }
 
 HttpServer::HttpServer(uint16_t port) {
@@ -95,6 +108,14 @@ unordered_map<HttpServer::ConnectId, ConnectionMeta>::const_iterator HttpServer:
     return _connectionMetas.cend();
 }
 
+void HttpServer::remove_connection(ConnectId connectId) {
+    if (_connectionMetas.find(connectId) != _connectionMetas.end()) {
+        QFrame *frame = _connectionMetas[connectId].frame.get();
+        emit signal_connection_removed(frame);
+        _connectionMetas.erase(connectId);
+    }
+}
+
 QHttpServerResponse HttpServer::on_ping() {
     QJsonObject response;
 
@@ -119,9 +140,10 @@ QHttpServerResponse HttpServer::on_connect(const QHttpServerRequest &request) {
 
     ConnectId connectId = generate_connect_id();
 
-    _connectionMetas[connectId] = ConnectionMeta{clientName, nullptr, false};
+    _connectionMetas.try_emplace(connectId);
+    _connectionMetas[connectId].clientName = std::move(clientName);
 
-    emit signal_connect_request(clientName, connectId);
+    emit signal_connect_request(_connectionMetas[connectId].clientName, connectId);
 
     QJsonObject response;
     response["ConnectId"] = connectId;

@@ -10,14 +10,12 @@
 class ReceivePage : public QWidget {
     Q_OBJECT
 
-private slots:
-    void on_client_changed();
-
 public:
     ReceivePage(const QString &serverName, QWidget *parent = nullptr);
 
-    static void clean_layout(QLayout *layout);
-    void update_client_list();
+private slots:
+    void on_connection_approved(QFrame *frame, const QString &clientName);
+    void on_connection_removed(QFrame *frame);
 
 private:
     QVBoxLayout *_layout;

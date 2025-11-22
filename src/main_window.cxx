@@ -144,11 +144,9 @@ void MainWindow::setup_ui() {
             config.set_default_save_dir(dir);
         }
     });
-
-    connect(this, &MainWindow::signal_client_changed, receivePage, &ReceivePage::update_client_list);
 }
 
-void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId connectId) {
+void MainWindow::on_connect_request(const QString &clientName, HttpServer::ConnectId connectId) {
     ConnectDialog connectDialog(clientName, this);
     HttpServer &httpServer = HttpServer::get_instance();
     if (connectDialog.exec() == QDialog::Accepted) {
@@ -158,6 +156,4 @@ void MainWindow::on_connect_request(QString clientName, HttpServer::ConnectId co
     else {
         httpServer.set_is_approved(connectId, false, "");
     }
-
-    emit signal_client_changed();
 }
