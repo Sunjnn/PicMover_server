@@ -31,5 +31,9 @@ ConnectDialog::ConnectDialog(const QString &clientName, QWidget *parent) : QDial
 }
 
 QString ConnectDialog::get_download_path() const {
+    if (_lineEdit->text().isEmpty()) {
+        Config &config = Config::get_instance();
+        return config.get_default_save_dir();
+    }
     return _lineEdit->text();
 }
