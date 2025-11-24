@@ -10,6 +10,7 @@
 #include "utility.hxx"
 
 Config::Config(const QString &filePath) : _configFilePath(filePath) {
+    qInfo() << "Config file path: " << filePath;
     load();
 }
 
@@ -19,7 +20,6 @@ Config::~Config() {
 
 Config &Config::get_instance() {
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/config.ini";
-    qInfo() << "Config file path: " << configFilePath;
     static Config config(configFilePath);
     return config;
 }
