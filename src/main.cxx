@@ -1,11 +1,12 @@
 #include <qapplication.h>
 #include <qdir.h>
+#include <qstandardpaths.h>
 
 #include "config.hxx"
 #include "main_window.hxx"
 
 void custom_message_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-    static QFile file(QCoreApplication::applicationDirPath() + "/PicMover_log.txt");
+    static QFile file(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/PicMover_log.txt");
 
     if (!file.isOpen()) {
         file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);

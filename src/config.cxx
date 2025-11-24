@@ -18,7 +18,7 @@ Config::~Config() {
 }
 
 Config &Config::get_instance() {
-    QString configFilePath = QCoreApplication::applicationDirPath() + "/config.ini";
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/config.ini";
     qInfo() << "Config file path: " << configFilePath;
     static Config config(configFilePath);
     return config;
