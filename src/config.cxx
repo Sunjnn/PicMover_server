@@ -19,7 +19,8 @@ Config::~Config() {
 }
 
 Config &Config::get_instance() {
-    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/config.ini";
+    QString configFilePath =
+        QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/PicMover_config.ini";
     static Config config(configFilePath);
     return config;
 }
