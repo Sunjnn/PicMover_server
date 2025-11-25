@@ -25,6 +25,9 @@ jobs:
     - name: Setup MSVC
       uses: microsoft/setup-msbuild@v2
 
+    - name: Install NSIS
+      run: choco install nsis -y
+
     - name: Configure
       run: cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%"
 
