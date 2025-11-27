@@ -39,7 +39,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -G Ninja -B check -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake -G Ninja -B check -S . -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%"
 
       - name: Formet check
