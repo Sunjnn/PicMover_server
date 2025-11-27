@@ -1,30 +1,17 @@
-execute_process(
-    COMMAND git describe --tags --abbrev=0
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    RESULT_VARIABLE TAG_RESULT
-    OUTPUT_VARIABLE TAG
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+if(NOT DEFINED GIT_VERSION)
+    execute_process(
+        COMMAND git describe --tags --always --dirty
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
 
-if(NOT TAG_RESULT EQUAL 0)
-    set(TAG "no-tag")
+    if(NOT GIT_VERSION)
+        set(GIT_VERSION "unknown")
+    endif()
 endif()
 
-execute_process(
-    COMMAND git rev-parse --abbrev-ref HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE BRANCH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-    COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-set(GIT_VERSION "${TAG}-${BRANCH}-${HASH}")
 message("Version: ${GIT_VERSION}")
 
 configure_file(
