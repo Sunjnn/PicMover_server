@@ -21,13 +21,13 @@ add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network Qt6::HttpServer Qt6::Gui Qt6::Widgets)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND "${QT_BIN_DIR}/windeployqt.exe" --dir "${CMAKE_CURRENT_BINARY_DIR}/deploy" $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND "${QT_BIN_DIR}/windeployqt.exe" --dir "${CMAKE_CURRENT_BINARY_DIR}/Release" $<TARGET_FILE:${PROJECT_NAME}>
 )
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION .)
 
-install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/deploy/"
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release"
     DESTINATION .)
 
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
