@@ -38,13 +38,15 @@ jobs:
         run: choco install nsis -y
 
       - name: Configure
-        run: cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: |
+          cmake -G Ninja -B check -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%"
 
       - name: Formet check
         run: '& "${{ env.LLVM_PATH }}/bin/clang-format" -i ./src/*.cxx -i ./src/*.hxx --dry-run --Werror'
 
       - name: Static check
-        run: '& "${{ env.LLVM_PATH }}/bin/clang-tidy" -p build -header-filter=src/.* src/*.cxx src/*.hxx -warnings-as-errors=*'
+        run: '& "${{ env.LLVM_PATH }}/bin/clang-tidy" -p check -header-filter=src/.* src/*.cxx src/*.hxx -warnings-as-errors=*'
 
       - name: Build
         run: cmake --build build --config Release
