@@ -40,7 +40,7 @@ jobs:
       - name: Configure
         run: |
           cmake -G Ninja -B check -S . -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-          cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%"
+          cmake -B build -S . -A x64 -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -DGIT_VERSION=${{ github.ref_name }}-${GITHUB_SHA::8}
 
       - name: Formet check
         run: '& "${{ env.LLVM_PATH }}/bin/clang-format" -i ./src/*.cxx -i ./src/*.hxx --dry-run --Werror'
