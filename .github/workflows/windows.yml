@@ -78,20 +78,10 @@ jobs:
           name: installer
 
       - name: Create release
-        uses: comnoco/create-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
+          files: "*.exe"
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          name: ${{ github.ref }}
           prerelease: ${{ contains(github.ref_name, '-') }}
-          draft: false
-
-      - name: Upload release assets
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          file: "*.exe"
-          tags: true
           draft: false
