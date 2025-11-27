@@ -46,7 +46,7 @@ jobs:
         run: '& "${{ env.LLVM_PATH }}/bin/clang-format" -i ./src/*.cxx -i ./src/*.hxx --dry-run --Werror'
 
       - name: Static check
-        run: '& "${{ env.LLVM_PATH }}/bin/clang-tidy" -p check -header-filter=src/.* src/*.cxx src/*.hxx -warnings-as-errors=*'
+        run: '& "${{ env.LLVM_PATH }}/bin/clang-tidy" -p check -header-filter="src/.*" src/*.cxx src/*.hxx -warnings-as-errors="*"'
 
       - name: Build
         run: cmake --build build --config Release
