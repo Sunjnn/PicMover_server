@@ -1,3 +1,5 @@
-#ifndef PICMOVER_VERSION
-#define PICMOVER_VERSION "@GIT_VERSION@"
-#endif
+#ifndef _VERSION_HXX_
+
+constexpr const char *PICMOVER_VERSION = "@GIT_VERSION@";
+
+#endif // _VERSION_HXX_
