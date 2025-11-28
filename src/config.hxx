@@ -4,13 +4,14 @@
 #include <qcontainerfwd.h>
 #include <qmap.h>
 #include <qobject.h>
+#include <qstandardpaths.h>
 #include <qvariant.h>
 
 constexpr const char *APPLICATION_NAME = "PicMover";
 
 class Config {
 private:
-    explicit Config(const QString &filePath);
+    explicit Config();
     ~Config();
 
 public:
@@ -20,7 +21,11 @@ public:
 
     void save() const;
 
-    const QString &get_config_file_path() const;
+    static const QString &get_config_file_path();
+    static void set_config_file_path(const QString &filePath);
+
+    static const QString &get_log_file_path();
+    static void set_log_file_path(const QString &filePath);
 
     const QString &get_server_name() const;
 
@@ -33,7 +38,9 @@ public:
     void set_default_save_dir(QString &&dir);
 
 private:
-    QString _configFilePath;
+    static QString _configFilePath;
+    static QString _logFilePath;
+
     QString _serverName;
     QString _defaultSaveDir;
 };

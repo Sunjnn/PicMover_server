@@ -23,6 +23,7 @@
 #include "connect_dialog.hxx"
 #include "http_server.hxx"
 #include "receive_page.hxx"
+#include "version.hxx"
 
 using std::make_unique;
 
@@ -65,8 +66,9 @@ void MainWindow::setup_ui() {
 
     auto *btnReceive = new QPushButton("Receive");
     auto *btnSettings = new QPushButton("Settings");
+    auto *btnDetail = new QPushButton("Detail");
 
-    for (auto *btn : {btnReceive, btnSettings}) {
+    for (auto *btn : {btnReceive, btnSettings, btnDetail}) {
         btn->setStyleSheet("QPushButton {"
                            "  font-size: 16px;"
                            "  text-align: left;"
@@ -80,6 +82,7 @@ void MainWindow::setup_ui() {
     menuLayout->addWidget(title);
     menuLayout->addWidget(btnReceive);
     menuLayout->addWidget(btnSettings);
+    menuLayout->addWidget(btnDetail);
     menuLayout->addSpacing(30);
     menuLayout->addStretch();
 
@@ -124,9 +127,29 @@ void MainWindow::setup_ui() {
     settingsLayout->addLayout(defaultSaveRowLayout);
     settingsLayout->addStretch();
 
+    // Detail page
+    auto *detailPage = new QWidget();
+    auto *detailLayout = new QVBoxLayout(detailPage);
+    detailLayout->setAlignment(AlignTop);
+    detailLayout->setContentsMargins(40, 40, 40, 40);
+    detailLayout->setSpacing(30);
+
+    auto *detailTitle = new QLabel("Software Detail");
+    detailTitle->setStyleSheet("font-size: 22px; font-weight: bold;");
+
+    auto *versionLabel = new QLabel("Version: " + QString(PICMOVER_VERSION));
+    auto *configFileLabel = new QLabel("Config file: " + config.get_config_file_path());
+    auto *logFileLabel = new QLabel("Log file: " + Config::get_log_file_path());
+
+    detailLayout->addWidget(detailTitle);
+    detailLayout->addWidget(versionLabel);
+    detailLayout->addWidget(configFileLabel);
+    detailLayout->addWidget(logFileLabel);
+
     // Add pages to stack
     stackedWidget->addWidget(receivePage);  // index 0
     stackedWidget->addWidget(settingsPage); // index 1
+    stackedWidget->addWidget(detailPage);   // index 2
 
     // --- Combine ---
     mainLayout->addWidget(leftMenu);
@@ -135,6 +158,7 @@ void MainWindow::setup_ui() {
     // --- Connect Buttons ---
     connect(btnReceive, &QPushButton::clicked, [stackedWidget]() { stackedWidget->setCurrentIndex(0); });
     connect(btnSettings, &QPushButton::clicked, [stackedWidget]() { stackedWidget->setCurrentIndex(1); });
+    connect(btnDetail, &QPushButton::clicked, [stackedWidget]() { stackedWidget->setCurrentIndex(2); });
     connect(chooseButton, &QPushButton::clicked, [defaultSaveDirEdit, this]() {
         QString dir = QFileDialog::getExistingDirectory(this, "Select Save Location");
         if (!dir.isEmpty()) {

@@ -9,8 +9,10 @@
 
 #include "utility.hxx"
 
-Config::Config(const QString &filePath) : _configFilePath(filePath) {
-    qInfo() << "Config file path: " << filePath;
+QString Config::_configFilePath = "";
+QString Config::_logFilePath = "";
+
+Config::Config() {
     load();
 }
 
@@ -19,9 +21,7 @@ Config::~Config() {
 }
 
 Config &Config::get_instance() {
-    QString configFilePath =
-        QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/PicMover_config.ini";
-    static Config config(configFilePath);
+    static Config config;
     return config;
 }
 
@@ -59,8 +59,20 @@ void Config::set_server_name(QString &&serverName) {
     _serverName = std::move(serverName);
 }
 
-const QString &Config::get_config_file_path() const {
+const QString &Config::get_config_file_path() {
     return _configFilePath;
+}
+
+void Config::set_config_file_path(const QString &filePath) {
+    _configFilePath = filePath;
+}
+
+const QString &Config::get_log_file_path() {
+    return _logFilePath;
+}
+
+void Config::set_log_file_path(const QString &filePath) {
+    _logFilePath = filePath;
 }
 
 const QString &Config::get_default_save_dir() const {

@@ -16,6 +16,6 @@ message("Version: ${GIT_VERSION}")
 
 configure_file(
   ${CMAKE_DIR}/version.hxx.in
-  ${CMAKE_CURRENT_BINARY_DIR}/version.hxx
+  ${CMAKE_CURRENT_BINARY_DIR}/include/version.hxx
   @ONLY
 )

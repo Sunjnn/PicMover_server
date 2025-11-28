@@ -19,6 +19,7 @@ qt_standard_project_setup()
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network Qt6::HttpServer Qt6::Gui Qt6::Widgets)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND "${QT_BIN_DIR}/windeployqt.exe" --dir "${CMAKE_CURRENT_BINARY_DIR}/Release" $<TARGET_FILE:${PROJECT_NAME}>

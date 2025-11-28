@@ -22,6 +22,10 @@ CheckOptions:
     value: _
   - key: readability-identifier-naming.PublicMemberCase
     value: camelBack
+  - key: readability-identifier-naming.ClassMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ClassMemberPrefix
+    value: "_"
 
   - key: readability-identifier-naming.ConstVariableCase
     value: camelBack

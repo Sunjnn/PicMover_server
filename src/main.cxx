@@ -6,7 +6,7 @@
 #include "main_window.hxx"
 
 void custom_message_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-    static QFile file(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/PicMover_log.txt");
+    QFile file(Config::get_log_file_path());
 
     if (!file.isOpen()) {
         file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
@@ -39,6 +39,11 @@ void custom_message_handler(QtMsgType type, const QMessageLogContext &context, c
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(APPLICATION_NAME);
+
+    Config::set_config_file_path(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) +
+                                 "/PicMover_config.ini");
+    Config::set_log_file_path(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) +
+                              "/PicMover_log.txt");
 
     qInstallMessageHandler(custom_message_handler);
 
