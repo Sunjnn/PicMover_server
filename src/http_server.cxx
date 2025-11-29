@@ -77,6 +77,9 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
             [this, connectId]() { remove_connection(connectId); });
 
     emit signal_connection_approved(_connectionMetas[connectId].frame.get(), _connectionMetas[connectId]);
+
+    qInfo() << "Approved connection from" << _connectionMetas[connectId].clientName << "with ConnectId" << connectId
+            << "saving to" << QString::fromStdString(backupDirectory);
 }
 
 HttpServer::HttpServer(uint16_t port) {
@@ -269,6 +272,8 @@ QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
     const BackupManager *backupManager = _connectionMetas[connectId].backupManager.get();
 
     TaskId taskId = generate_task_id();
+
+    qInfo() << "Starting backup task" << taskId << "for ConnectId" << connectId << "with" << files.size() << "files.";
 
     _taskFutures[taskId] = QtConcurrent::run(&BackupManager::backup_files, backupManager, std::move(files));
 

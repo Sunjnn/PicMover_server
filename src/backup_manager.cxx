@@ -10,6 +10,8 @@
 #include <vector>
 
 #include <qcontainerfwd.h>
+#include <qdebug.h>
+#include <qlogging.h>
 #include <qobject.h>
 #include <qstringview.h>
 #include <qtypes.h>
@@ -61,7 +63,12 @@ bool BackupManager::backup_file(const QString &fileName, const QString &creation
     path absolutePath = _backupDirectory / newFileName.toStdString();
     ofstream ofs(absolutePath, std::ios::binary);
     ofs.write(content.constData(), content.size());
-    return ofs.good();
+    bool ifGood = ofs.good();
+
+    qInfo() << "Backed up file to" << QString::fromStdString(absolutePath.string())
+            << (ifGood ? " success" : " failed");
+
+    return ifGood;
 }
 
 QString BackupManager::get_backup_directory() const {
