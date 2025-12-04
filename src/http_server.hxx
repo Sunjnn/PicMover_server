@@ -11,6 +11,7 @@
 #include <qfuture.h>
 #include <qhostaddress.h>
 #include <qhttpserver.h>
+#include <qhttpserverrequest.h>
 #include <qhttpserverresponse.h>
 #include <qobject.h>
 #include <qobjectdefs.h>
@@ -70,6 +71,7 @@ private:
     QHttpServerResponse on_ping();
     QHttpServerResponse on_connect(const QHttpServerRequest &request);
     QHttpServerResponse on_status(const QHttpServerRequest &request);
+    QHttpServerResponse on_exist(const QHttpServerRequest &request);
     QHttpServerResponse on_upload(const QHttpServerRequest &request);
 
     ConnectId generate_connect_id();

@@ -80,6 +80,22 @@ QString BackupManager::get_backup_directory() const {
     return QString::fromStdString(_backupDirectory.string());
 }
 
+QString BackupManager::get_real_path(const QString &fileName, const QString &creationDate) const {
+    QString newFileName;
+    qsizetype dotPos = fileName.lastIndexOf('.');
+    if (dotPos == -1) {
+        newFileName = fileName + "_" + creationDate;
+    }
+    else {
+        QString baseName = fileName.left(dotPos);
+        QString extension = fileName.mid(dotPos + 1);
+        newFileName = baseName + "_" + creationDate + "." + extension;
+    }
+
+    path absolutePath = _backupDirectory / newFileName.toStdString();
+    return QString::fromStdString(absolutePath.string());
+}
+
 BackupManager::Format BackupManager::get_format(const QString &formatString) {
     QString lowerFormatString = formatString.toLower();
 

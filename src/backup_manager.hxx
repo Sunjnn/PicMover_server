@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <qcontainerfwd.h>
+#include <qobject.h>
 
 #include "file_content.hxx"
 
@@ -18,6 +19,8 @@ public:
     bool backup_file(const QString &fileName, const QString &creationDate, const QByteArray &content) const;
 
     QString get_backup_directory() const;
+
+    QString get_real_path(const QString &fileName, const QString &creationDate) const;
 
 private:
     enum class Format : char {

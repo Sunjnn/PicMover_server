@@ -13,6 +13,7 @@
 
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <qcontainerfwd.h>
+#include <qdir.h>
 #include <qframe.h>
 #include <qfuture.h>
 #include <qhostaddress.h>
@@ -90,6 +91,9 @@ HttpServer::HttpServer(uint16_t port) {
 
     _server.route("/status", QHttpServerRequest::Method::Get,
                   [this](const QHttpServerRequest &request) { return on_status(request); });
+
+    _server.route("/exist", QHttpServerRequest::Method::Post,
+                  [this](const QHttpServerRequest &request) { return on_exist(request); });
 
     _server.route("/upload", QHttpServerRequest::Method::Post,
                   [this](const QHttpServerRequest &request) { return on_upload(request); });
@@ -219,6 +223,68 @@ QHttpServerResponse HttpServer::on_status(const QHttpServerRequest &request) {
 
         return QHttpServerResponse(response);
     }
+}
+
+QHttpServerResponse HttpServer::on_exist(const QHttpServerRequest &request) {
+    QByteArray rawBody = request.body();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(rawBody, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        return QHttpServerResponse("Invalid JSON: " + parseError.errorString(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QJsonObject json = doc.object();
+
+    if (!json.contains("ConnectId")) {
+        return QHttpServerResponse("Missing 'ConnectId' field", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    ConnectId connectId = json["ConnectId"].toInteger();
+    if (_connectionMetas.find(connectId) == _connectionMetas.end()) {
+        return QHttpServerResponse("Invalid connectId", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    if (!json.contains("Data") || !json["Data"].isArray()) {
+        return QHttpServerResponse("Missing or invalid 'Data' field", QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QJsonArray existArray;
+    QJsonArray notExistArray;
+    QJsonArray errorArray;
+
+    ConnectionMeta &meta = _connectionMetas[connectId];
+
+    QJsonArray dataArray = json["Data"].toArray();
+    for (QJsonValue &&node : dataArray) {
+        if (!node.isObject()) {
+            errorArray.append(std::move(node));
+            continue;
+        }
+
+        QJsonObject fileObject = node.toObject();
+        if (!fileObject.contains("FileName") || !fileObject.contains("CreationDate")) {
+            errorArray.append(std::move(node));
+            continue;
+        }
+
+        const QString &fileName = fileObject["FileName"].toString();
+        const QString &creationDate = fileObject["CreationDate"].toString();
+
+        if (QFile::exists(meta.backupManager->get_real_path(fileName, creationDate))) {
+            existArray.append(std::move(node));
+        }
+        else {
+            notExistArray.append(std::move(node));
+        }
+    }
+
+    QJsonObject response;
+    response["Exist"] = existArray;
+    response["NotExist"] = notExistArray;
+    response["Error"] = errorArray;
+    return QHttpServerResponse(response);
 }
 
 QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
