@@ -24,7 +24,12 @@ using std::string;
 using std::tolower;
 using std::transform;
 using std::vector;
+using std::filesystem::create_directories;
 using std::filesystem::path;
+
+BackupManager::BackupManager(const std::string &backupDirectory) : _backupDirectory(backupDirectory) {
+    create_directories(_backupDirectory);
+}
 
 vector<int> BackupManager::backup_files(const vector<FileContent> &files) const {
     vector<int> failedIndexes;

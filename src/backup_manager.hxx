@@ -11,8 +11,7 @@
 
 class BackupManager {
 public:
-    BackupManager(const std::string &backupDirectory) : _backupDirectory(backupDirectory) {
-    }
+    BackupManager(const std::string &backupDirectory);
 
     std::vector<int> backup_files(const std::vector<FileContent> &files) const;
 
