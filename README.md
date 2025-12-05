@@ -44,3 +44,4 @@ clang-tidy -p build -header-filter='src/.*' src/*.cxx src/*.hxx
 ```
 
 This will analyze all source and header files in the `src` folder and report potential issues based on the configured checks.
+
