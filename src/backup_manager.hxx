@@ -1,18 +1,17 @@
 #ifndef _BACKUP_MANAGER_HXX_
 #define _BACKUP_MANAGER_HXX_
 
-#include <filesystem>
-#include <string>
 #include <vector>
 
 #include <qcontainerfwd.h>
+#include <qdir.h>
 #include <qobject.h>
 
 #include "file_content.hxx"
 
 class BackupManager {
 public:
-    BackupManager(const std::string &backupDirectory);
+    BackupManager(const QString &backupDirectory);
 
     std::vector<int> backup_files(const std::vector<FileContent> &files) const;
 
@@ -31,7 +30,7 @@ private:
 
     static Format get_format(const QString &formatString);
 
-    std::filesystem::path _backupDirectory;
+    QDir _backupDirectory;
 };
 
 #endif // _BACKUP_MANAGER_HXX_

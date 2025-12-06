@@ -6,7 +6,6 @@
 #include <limits>
 #include <memory>
 #include <random>
-#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -46,7 +45,6 @@ using std::mt19937;
 using std::numeric_limits;
 using std::random_device;
 using std::runtime_error;
-using std::string;
 using std::uint16_t;
 using std::uniform_int_distribution;
 using std::unordered_map;
@@ -65,8 +63,7 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
 
     Config &config = Config::get_instance();
 
-    const string backupDirectory = savePath.toStdString();
-    _connectionMetas[connectId].backupManager = make_unique<BackupManager>(backupDirectory);
+    _connectionMetas[connectId].backupManager = make_unique<BackupManager>(savePath);
     _connectionMetas[connectId].frame = make_unique<QFrame>();
     _connectionMetas[connectId].timer = make_unique<QTimer>();
     _connectionMetas[connectId].timer->setSingleShot(true);
@@ -80,7 +77,7 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
     emit signal_connection_approved(_connectionMetas[connectId].frame.get(), _connectionMetas[connectId]);
 
     qInfo() << "Approved connection from" << _connectionMetas[connectId].clientName << "with ConnectId" << connectId
-            << "saving to" << QString::fromStdString(backupDirectory);
+            << "saving to" << savePath;
 }
 
 HttpServer::HttpServer(uint16_t port) {

@@ -6,11 +6,12 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <string>
 #include <vector>
 
 #include <qcontainerfwd.h>
 #include <qdebug.h>
+#include <qdir.h>
+#include <qimage.h>
 #include <qlogging.h>
 #include <qobject.h>
 #include <qstringview.h>
@@ -20,15 +21,14 @@
 
 using std::invalid_argument;
 using std::ofstream;
-using std::string;
 using std::tolower;
 using std::transform;
 using std::vector;
 using std::filesystem::create_directories;
 using std::filesystem::path;
 
-BackupManager::BackupManager(const std::string &backupDirectory) : _backupDirectory(backupDirectory) {
-    create_directories(_backupDirectory);
+BackupManager::BackupManager(const QString &backupDirectory) : _backupDirectory(backupDirectory) {
+    _backupDirectory.mkdir(".");
 }
 
 vector<int> BackupManager::backup_files(const vector<FileContent> &files) const {
@@ -65,19 +65,21 @@ bool BackupManager::backup_file(const QString &fileName, const QString &creation
     const QString &baseName = fileName.left(dotPos);
     QString newFileName = baseName + "_" + creationDate + "." + formatString;
 
-    path absolutePath = _backupDirectory / newFileName.toStdString();
-    ofstream ofs(absolutePath, std::ios::binary);
-    ofs.write(content.constData(), content.size());
-    bool ifGood = ofs.good();
+    QString absolutePath = _backupDirectory.filePath(newFileName);
+    QFile file(absolutePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        qInfo() << "Failed to open file for writing:" << absolutePath;
+        return false;
+    }
+    bool ifGood = (file.write(content) == content.size());
 
-    qInfo() << "Backed up file to" << QString::fromStdString(absolutePath.string())
-            << (ifGood ? " success" : " failed");
+    qInfo() << "Backed up file to" << absolutePath << (ifGood ? " success" : " failed");
 
     return ifGood;
 }
 
 QString BackupManager::get_backup_directory() const {
-    return QString::fromStdString(_backupDirectory.string());
+    return _backupDirectory.absolutePath();
 }
 
 QString BackupManager::get_real_path(const QString &fileName, const QString &creationDate) const {
@@ -92,8 +94,7 @@ QString BackupManager::get_real_path(const QString &fileName, const QString &cre
         newFileName = baseName + "_" + creationDate + "." + extension;
     }
 
-    path absolutePath = _backupDirectory / newFileName.toStdString();
-    return QString::fromStdString(absolutePath.string());
+    return _backupDirectory.filePath(newFileName);
 }
 
 BackupManager::Format BackupManager::get_format(const QString &formatString) {
