@@ -19,6 +19,7 @@
 #include <qtimer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
+#include <qudpsocket.h>
 #include <qwidget.h>
 
 #include "backup_manager.hxx"
@@ -65,6 +66,9 @@ signals:
     void signal_connection_approved(QFrame *frame, const ConnectionMeta &meta);
     void signal_connection_removed(QFrame *frame);
 
+private slots:
+    void on_ready_read();
+
 private:
     HttpServer(std::uint16_t port);
 
@@ -74,6 +78,8 @@ private:
     QHttpServerResponse on_exist(const QHttpServerRequest &request);
     QHttpServerResponse on_upload(const QHttpServerRequest &request);
 
+    QString get_local_ip();
+
     ConnectId generate_connect_id();
 
     TaskId generate_task_id();
@@ -82,6 +88,7 @@ private:
 
     QHttpServer _server;
     QTcpServer _tcpServer;
+    QUdpSocket _udpSocket;
 
     std::unordered_map<ConnectId, ConnectionMeta> _connectionMetas;
     std::unordered_map<TaskId, QFuture<std::vector<int>>> _taskFutures;

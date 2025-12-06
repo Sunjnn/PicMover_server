@@ -24,6 +24,8 @@
 #include <qjsonvalue.h>
 #include <qlogging.h>
 #include <qmessagebox.h>
+#include <qnetworkdatagram.h>
+#include <qnetworkinterface.h>
 #include <qobject.h>
 #include <qobjectdefs.h>
 #include <qstringview.h>
@@ -32,6 +34,7 @@
 #include <qtimer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
+#include <qudpsocket.h>
 #include <qurlquery.h>
 #include <qwidget.h>
 
@@ -82,6 +85,26 @@ void HttpServer::set_is_approved(ConnectId connectId, bool approved, const QStri
             << "saving to" << savePath;
 }
 
+void HttpServer::on_ready_read() {
+    QString ip = get_local_ip();
+    if (ip.isEmpty()) {
+        qInfo() << "Failed to get local IP address for UDP discovery response.";
+        return;
+    }
+
+    while (_udpSocket.hasPendingDatagrams()) {
+        QNetworkDatagram datagram = _udpSocket.receiveDatagram();
+        QString message = QString::fromUtf8(datagram.data());
+
+        if (message != "PicMover_Discovery") {
+            continue;
+        }
+
+        QString reply = QString("PicMover_INFO %1:%2").arg(ip).arg(_tcpServer.serverPort());
+        _udpSocket.writeDatagram(reply.toUtf8(), datagram.senderAddress(), datagram.senderPort());
+    }
+}
+
 HttpServer::HttpServer(uint16_t port) {
     _server.route("/ping", [this]() { return on_ping(); });
 
@@ -100,6 +123,9 @@ HttpServer::HttpServer(uint16_t port) {
     if (!_tcpServer.listen(QHostAddress::Any, port) || !_server.bind(&_tcpServer)) {
         throw runtime_error("Failed to start HTTP server " + _tcpServer.errorString().toStdString());
     }
+
+    _udpSocket.bind(QHostAddress::Any, port);
+    connect(&_udpSocket, &QUdpSocket::readyRead, this, &HttpServer::on_ready_read);
 }
 
 size_t HttpServer::get_connection_count() const {
@@ -345,6 +371,24 @@ QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
     QJsonObject response;
     response["TaskId"] = taskId;
     return QHttpServerResponse(response);
+}
+
+QString HttpServer::get_local_ip() {
+    for (const QNetworkInterface &iface : QNetworkInterface::allInterfaces()) {
+        if (!iface.flags().testFlags(QNetworkInterface::IsUp | QNetworkInterface::IsRunning |
+                                     QNetworkInterface::CanBroadcast) ||
+            iface.flags().testFlag(QNetworkInterface::IsLoopBack)) {
+            continue;
+        }
+
+        for (const QNetworkAddressEntry &entry : iface.addressEntries()) {
+            QHostAddress ip = entry.ip();
+            if (ip.protocol() == QAbstractSocket::IPv4Protocol) {
+                return ip.toString();
+            }
+        }
+    }
+    return "";
 }
 
 HttpServer::ConnectId HttpServer::generate_connect_id() {
