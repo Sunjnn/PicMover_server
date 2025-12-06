@@ -6,7 +6,7 @@ include(${CMAKE_DIR}/version.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network HttpServer Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Network HttpServer Gui Widgets Concurrent)
 get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
 
@@ -18,7 +18,7 @@ qt_standard_project_setup()
 
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network Qt6::HttpServer Qt6::Gui Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network Qt6::HttpServer Qt6::Gui Qt6::Widgets Qt6::Concurrent)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

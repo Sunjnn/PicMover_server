@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <QtConcurrent/qtconcurrentrun.h>
 #include <qcontainerfwd.h>
 #include <qdir.h>
 #include <qframe.h>
@@ -28,6 +27,7 @@
 #include <qobject.h>
 #include <qobjectdefs.h>
 #include <qstringview.h>
+#include <qtconcurrentrun.h>
 #include <qthread.h>
 #include <qtimer.h>
 #include <qtmetamacros.h>
@@ -49,6 +49,8 @@ using std::uint16_t;
 using std::uniform_int_distribution;
 using std::unordered_map;
 using std::vector;
+
+using QtConcurrent::run;
 
 HttpServer &HttpServer::get_instance() {
     static HttpServer instance(54321);
@@ -338,7 +340,7 @@ QHttpServerResponse HttpServer::on_upload(const QHttpServerRequest &request) {
 
     qInfo() << "Starting backup task" << taskId << "for ConnectId" << connectId << "with" << files.size() << "files.";
 
-    _taskFutures[taskId] = QtConcurrent::run(&BackupManager::backup_files, backupManager, std::move(files));
+    _taskFutures[taskId] = run(&BackupManager::backup_files, backupManager, std::move(files));
 
     QJsonObject response;
     response["TaskId"] = taskId;
