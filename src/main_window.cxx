@@ -139,7 +139,9 @@ void MainWindow::setup_ui() {
 
     auto *versionLabel = new QLabel("Version: " + QString(PICMOVER_VERSION));
     auto *configFileLabel = new QLabel("Config file: " + config.get_config_file_path());
+    configFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
     auto *logFileLabel = new QLabel("Log file: " + Config::get_log_file_path());
+    logFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
 
     detailLayout->addWidget(detailTitle);
     detailLayout->addWidget(versionLabel);
