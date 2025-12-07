@@ -96,6 +96,10 @@ void HttpServer::on_ready_read() {
         QNetworkDatagram datagram = _udpSocket.receiveDatagram();
         QString message = QString::fromUtf8(datagram.data());
 
+        qInfo() << "Received UDP discovery message from" << datagram.senderAddress().toString() << ":"
+                << datagram.senderPort() << "to" << datagram.destinationAddress().toString() << ":"
+                << datagram.destinationPort() << "-" << message;
+
         if (message != "PicMover_Discovery") {
             continue;
         }
