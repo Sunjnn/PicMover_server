@@ -100,10 +100,6 @@ void HttpServer::on_ready_read() {
                 << datagram.senderPort() << "to" << datagram.destinationAddress().toString() << ":"
                 << datagram.destinationPort() << "-" << message;
 
-        if (message != "PicMover_Discovery") {
-            continue;
-        }
-
         QString reply = QString("PicMover_INFO %1:%2").arg(ip).arg(_tcpServer.serverPort());
         _udpSocket.writeDatagram(reply.toUtf8(), datagram.senderAddress(), datagram.senderPort());
     }
